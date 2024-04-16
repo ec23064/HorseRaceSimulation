@@ -33,6 +33,15 @@ public class Horse {
     // Other methods of class Horse
     public void fall() {
         this.fallen = true;
+        if (this.confidence > 0.0){
+            this.confidence -= 0.1;
+            this.confidence = Math.round(this.confidence * 100.0) / 100.0;
+        }
+    }
+
+    public void reset() {
+        this.fallen = false;
+        this.distance = 0;
     }
 
     public double getConfidence() {
@@ -70,4 +79,11 @@ public class Horse {
     public void setSymbol(char newSymbol) {
         this.symbol = newSymbol;
     }
+
+    public void increaseConfidence() {
+        if (this.confidence < 1.0){
+            this.confidence += 0.1;
+        }
+    }
+
 }
