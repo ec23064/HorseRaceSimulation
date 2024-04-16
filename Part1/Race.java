@@ -95,6 +95,21 @@ public class Race
                 TimeUnit.MILLISECONDS.sleep(100);
             }catch(Exception e){}
         }
+
+        //print the winner
+        if (raceWonBy(lane1Horse))
+        {
+            System.out.println("And the winner is " + lane1Horse.getName());
+        }
+        else if (raceWonBy(lane2Horse))
+        {
+            System.out.println("And the winner is " + lane2Horse.getName());
+        }
+        else if (raceWonBy(lane3Horse))
+        {
+            System.out.println("And the winner is " + lane3Horse.getName());
+        }
+
     }
     
     /**
@@ -191,7 +206,7 @@ public class Race
         //else print the horse's symbol
         if(theHorse.hasFallen())
         {
-            System.out.print('\u2322');
+            System.out.print("\u001B[31m" + "X" + "\u001B[0m");
         }
         else
         {
@@ -202,7 +217,7 @@ public class Race
         multiplePrint(' ',spacesAfter);
         
         //print the | for the end of the track
-        System.out.print('|');
+        System.out.print('|' + " " + theHorse.getName() + "(Confidence: " + theHorse.getConfidence() + ")");
     }
         
     
@@ -222,4 +237,5 @@ public class Race
         }
     }
 }
+
 
