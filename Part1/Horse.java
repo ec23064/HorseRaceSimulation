@@ -18,9 +18,16 @@ public class Horse {
      * Constructor for objects of class Horse
      */
     public Horse(char horseSymbol, String horseName, double horseConfidence) {
+        checkConfidenceValue(horseConfidence);
         this.symbol = horseSymbol;
         this.name = horseName;
         this.confidence = horseConfidence;
+    }
+
+    public void checkConfidenceValue(double confidence) {
+        if (confidence < 0 || confidence > 1) {
+            throw new IllegalArgumentException("Confidence value must be between 0 and 1");
+        }
     }
 
     // Other methods of class Horse
