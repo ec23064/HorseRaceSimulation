@@ -85,7 +85,7 @@ public class Race
             printRace();
             
             //if any of the three horses has won the race is finished
-            if ( raceWonBy(lane1Horse) || raceWonBy(lane2Horse) || raceWonBy(lane3Horse) )
+            if ( raceWonBy(lane1Horse) || raceWonBy(lane2Horse) || raceWonBy(lane3Horse) || (lane1Horse.hasFallen() && lane2Horse.hasFallen() && lane3Horse.hasFallen()))
             {
                 finished = true;
             }
@@ -100,16 +100,34 @@ public class Race
         if (raceWonBy(lane1Horse))
         {
             System.out.println("And the winner is " + lane1Horse.getName());
+            lane1Horse.increaseConfidence();
         }
         else if (raceWonBy(lane2Horse))
         {
             System.out.println("And the winner is " + lane2Horse.getName());
+            lane2Horse.increaseConfidence();
         }
         else if (raceWonBy(lane3Horse))
         {
             System.out.println("And the winner is " + lane3Horse.getName());
+            lane3Horse.increaseConfidence();
         }
 
+        resetFallen(lane1Horse, lane2Horse, lane3Horse);
+
+    }
+
+    /**
+     * Reset the fallen status of the horses
+     * 
+     * @param horse1 the first horse
+     * @param horse2 the second horse
+     * @param horse3 the third horse
+     */
+    private void resetFallen(Horse horse1, Horse horse2, Horse horse3){
+        horse1.reset();
+        horse2.reset();
+        horse3.reset();
     }
     
     /**
