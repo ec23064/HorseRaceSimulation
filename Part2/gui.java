@@ -8,20 +8,20 @@ import Part1.Race;
 public class gui extends Race {
     private JFrame frame;
     private JPanel panel;
-    private int trackWidth;  // Track width as a class member
+    private int trackWidth;
+    private int finalWidth;
 
     public gui(int distance) {
         super(distance);
         this.trackWidth = Math.max(100, 10 * distance);  // Calculate track width based on distance
+        this.finalWidth = Math.max(100, this.trackWidth + 200);
         initializeGUI();
     }
 
     private void initializeGUI() {
-        int finalWidth = Math.max(100, this.trackWidth + 200);  // Ensure frame is at least 800 or wider based on trackWidth
-
         frame = new JFrame("Horse Race Simulation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(finalWidth, 300);  // Use finalWidth to size the frame
+        frame.setSize(this.finalWidth, 300);  // Use finalWidth to size the frame
         frame.setLocationRelativeTo(null);
 
         panel = new JPanel(null);  // Use null layout for absolute positioning
@@ -29,7 +29,7 @@ public class gui extends Race {
         panel.setPreferredSize(new Dimension(this.trackWidth, 300));  // Set panel width to trackWidth
 
         JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setPreferredSize(new Dimension(finalWidth, 300));
+        scrollPane.setPreferredSize(new Dimension(this.finalWidth, 300));
         frame.add(scrollPane);
 
         frame.setVisible(true);
@@ -37,29 +37,48 @@ public class gui extends Race {
 
     @Override
     public void printRace() {
-        SwingUtilities.invokeLater(() -> {
-            panel.removeAll(); 
+        panel.removeAll(); 
 
-            Horse[] horses = {lane1Horse, lane2Horse, lane3Horse};
-            int yPosition = 30;
+        Horse[] horses = {lane1Horse, lane2Horse, lane3Horse};
+        int yPosition = 30;
 
-            for (int i = 0; i < horses.length; i++) {
-                if (horses[i] != null) {
-                    printLane(horses[i], yPosition);
-                    yPosition += 60;  // Space between lanes
-                }
-                if (i < horses.length - 1) {
-                    JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
-                    separator.setBounds(10, yPosition, this.trackWidth, 2);
-                    panel.add(separator);
-                    yPosition += 2;  // Adjust for the separator
-                }
+        for (int i = 0; i < horses.length; i++) {
+            if (horses[i] != null) {
+                printLane(horses[i], yPosition);
+                yPosition += 60;  // Space between lanes
             }
+            if (i < horses.length - 1) {
+                JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
+                separator.setBounds(10, yPosition, this.trackWidth, 2);
+                panel.add(separator);
+                yPosition += 2;  // Adjust for the separator
+            }
+        }
 
-            panel.setPreferredSize(new Dimension(this.trackWidth, yPosition + 30)); 
-            panel.revalidate();
-            panel.repaint();
-        });
+        panel.setPreferredSize(new Dimension(this.trackWidth, yPosition + 30)); 
+        panel.revalidate();
+        panel.repaint();
+
+        yPosition += 10;  // Space before winner label
+
+        if (raceWonBy(lane1Horse))
+        {
+            JLabel winnerLabel = new JLabel("And the winner is " + lane1Horse.getName());
+            winnerLabel.setBounds(10, yPosition, this.finalWidth, 50);
+            panel.add(winnerLabel);
+        }
+        else if (raceWonBy(lane2Horse))
+        {
+            JLabel winnerLabel = new JLabel("And the winner is " + lane2Horse.getName());
+            winnerLabel.setBounds(10, yPosition, this.finalWidth, 50);
+            panel.add(winnerLabel);
+        }
+        else if (raceWonBy(lane3Horse))
+        {
+            JLabel winnerLabel = new JLabel("And the winner is " + lane3Horse.getName());
+            winnerLabel.setBounds(10, yPosition, this.finalWidth, 50);
+            panel.add(winnerLabel);
+        }
     }
 
     protected void printLane(Horse theHorse, int yPos) {
@@ -85,7 +104,7 @@ public class gui extends Race {
     }
 
     public static void main(String[] args) {
-        gui raceGUI = new gui(50);
+        gui raceGUI = new gui(20);
         Horse horse1 = new Horse('&', "Horse 1", 0.8);
         Horse horse2 = new Horse('#', "Horse 2", 0.1);
         Horse horse3 = new Horse('$', "Horse 3", 0.5);
