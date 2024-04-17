@@ -8,24 +8,28 @@ import Part1.Race;
 public class gui extends Race {
     private JFrame frame;
     private JPanel panel;
+    private int trackWidth;  // Track width as a class member
 
     public gui(int distance) {
         super(distance);
+        this.trackWidth = Math.max(100, 10 * distance);  // Calculate track width based on distance
         initializeGUI();
     }
 
     private void initializeGUI() {
+        int finalWidth = Math.max(100, this.trackWidth + 200);  // Ensure frame is at least 800 or wider based on trackWidth
+
         frame = new JFrame("Horse Race Simulation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(800, 600);
+        frame.setSize(finalWidth, 300);  // Use finalWidth to size the frame
         frame.setLocationRelativeTo(null);
 
-        panel = new JPanel(null); 
+        panel = new JPanel(null);  // Use null layout for absolute positioning
         panel.setBackground(Color.WHITE);
-        panel.setPreferredSize(new Dimension(750, 300));
+        panel.setPreferredSize(new Dimension(this.trackWidth, 300));  // Set panel width to trackWidth
 
-        JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setPreferredSize(new Dimension(800, 300));
+        JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(finalWidth, 300));
         frame.add(scrollPane);
 
         frame.setVisible(true);
@@ -33,52 +37,55 @@ public class gui extends Race {
 
     @Override
     public void printRace() {
-        panel.removeAll(); 
+        SwingUtilities.invokeLater(() -> {
+            panel.removeAll(); 
 
-        Horse[] horses = {lane1Horse, lane2Horse, lane3Horse}; 
-        int yPosition = 30;
+            Horse[] horses = {lane1Horse, lane2Horse, lane3Horse};
+            int yPosition = 30;
 
-        for (int i = 0; i < horses.length; i++) {
-            if (horses[i] != null) {
-                printLane(horses[i], yPosition);
-                yPosition += 60; 
+            for (int i = 0; i < horses.length; i++) {
+                if (horses[i] != null) {
+                    printLane(horses[i], yPosition);
+                    yPosition += 60;  // Space between lanes
+                }
+                if (i < horses.length - 1) {
+                    JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
+                    separator.setBounds(10, yPosition, this.trackWidth, 2);
+                    panel.add(separator);
+                    yPosition += 2;  // Adjust for the separator
+                }
             }
-            // Add a separator between lanes
-            if (i < horses.length - 1) {
-                JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
-                separator.setBounds(10, yPosition, 700, 2);
-                panel.add(separator);
-                yPosition += 2; 
-            }
-        }
 
-        panel.setPreferredSize(new Dimension(750, yPosition + 30)); 
-        panel.revalidate();
-        panel.repaint();
+            panel.setPreferredSize(new Dimension(this.trackWidth, yPosition + 30)); 
+            panel.revalidate();
+            panel.repaint();
+        });
     }
 
     protected void printLane(Horse theHorse, int yPos) {
-        int trackWidth = 700; // Width of the race track
-        int horsePosition = (int) ((double) theHorse.getDistanceTravelled() / raceLength * trackWidth);
+        int horsePosition = (int) ((double) theHorse.getDistanceTravelled() / raceLength * this.trackWidth);
 
         JLabel laneLabel = new JLabel();
-        laneLabel.setBounds(10, yPos, trackWidth + 40, 50);
-        laneLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK)); 
+        laneLabel.setBounds(10, yPos, this.trackWidth, 50);
+        laneLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         laneLabel.setOpaque(true);
         laneLabel.setBackground(Color.LIGHT_GRAY);
-        laneLabel.setForeground(Color.BLACK);
-        
+
+        JLabel nameLabel = new JLabel(theHorse.getName() + " (Confidence: " + String.format("%.2f", theHorse.getConfidence()) + ")");
+        nameLabel.setBounds(10 + this.trackWidth + 10, yPos, 200, 50);
+
         JLabel horseLabel = new JLabel();
         horseLabel.setBounds(10 + horsePosition, yPos, 50, 50);
         String symbol = theHorse.hasFallen() ? "<html><font color='red'>X</font></html>" : Character.toString(theHorse.getSymbol());
         horseLabel.setText(symbol);
 
+        panel.add(nameLabel);
         panel.add(horseLabel);
         panel.add(laneLabel);
     }
 
     public static void main(String[] args) {
-        gui raceGUI = new gui(20);
+        gui raceGUI = new gui(50);
         Horse horse1 = new Horse('&', "Horse 1", 0.8);
         Horse horse2 = new Horse('#', "Horse 2", 0.1);
         Horse horse3 = new Horse('$', "Horse 3", 0.5);
@@ -91,3 +98,13 @@ public class gui extends Race {
         
     }
 }
+
+
+
+
+
+
+
+
+
+
