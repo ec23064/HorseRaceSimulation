@@ -4,18 +4,154 @@ import javax.swing.*;
 import java.awt.*;
 import Part1.Horse;
 import Part1.Race;
+import java.util.concurrent.TimeUnit;
 
-public class gui extends Race {
+public class gui{
     private JFrame frame;
     private JPanel panel;
     private int trackWidth;
     private int finalWidth;
+    private int raceLength;
+    private Horse lane1Horse;
+    private Horse lane2Horse;
+    private Horse lane3Horse;
 
     public gui(int distance) {
-        super(distance);
+        this.raceLength = distance;
         this.trackWidth = Math.max(100, 10 * distance);  
         this.finalWidth = Math.max(100, this.trackWidth + 200);
         initializeGUI();
+    }
+    
+    public void addHorse(Horse theHorse, int laneNumber) {
+        if (laneNumber == 1) {
+            lane1Horse = theHorse;
+        } else if (laneNumber == 2) {
+            lane2Horse = theHorse;
+        } else if (laneNumber == 3) {
+            lane3Horse = theHorse;
+        } else {
+            System.out.println("Cannot add horse to lane " + laneNumber + " because there is no such lane");
+        }
+    }
+
+        /**
+     * Start the race
+     * The horse are brought to the start and
+     * then repeatedly moved forward until the 
+     * race is finished
+     */
+    public void startRace() {
+        new Thread(() -> {
+            boolean finished = false;
+    
+            lane1Horse.goBackToStart();
+            lane2Horse.goBackToStart();
+            lane3Horse.goBackToStart();
+                          
+            while (!finished) {
+                moveHorse(lane1Horse);
+                moveHorse(lane2Horse);
+                moveHorse(lane3Horse);
+    
+                SwingUtilities.invokeLater(this::printRace);  // Ensure GUI updates are on the EDT
+    
+                if (raceWonBy(lane1Horse) || raceWonBy(lane2Horse) || raceWonBy(lane3Horse)) {
+                    finished = true;
+                    SwingUtilities.invokeLater(() -> showWinner());  // Display winner on the EDT
+                }
+    
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }).start();
+    }
+    
+    private void showWinner() {
+        JLabel winnerLabel = null;
+        if (raceWonBy(lane1Horse)) {
+            winnerLabel = new JLabel("And the winner is " + lane1Horse.getName());
+            lane1Horse.increaseConfidence();
+        } else if (raceWonBy(lane2Horse)) {
+            winnerLabel = new JLabel("And the winner is " + lane2Horse.getName());
+            lane2Horse.increaseConfidence();
+        } else if (raceWonBy(lane3Horse)) {
+            winnerLabel = new JLabel("And the winner is " + lane3Horse.getName());
+            lane3Horse.increaseConfidence();
+        }
+    
+        if (winnerLabel != null) {
+            winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
+            panel.add(winnerLabel);
+            panel.setPreferredSize(new Dimension(this.trackWidth, panel.getPreferredSize().height + 60));
+            panel.revalidate();
+            panel.repaint();
+        }
+    }
+    
+
+    /**
+     * Reset the fallen status of the horses
+     * 
+     * @param horse1 the first horse
+     * @param horse2 the second horse
+     * @param horse3 the third horse
+     */
+    protected void resetFallen(Horse horse1, Horse horse2, Horse horse3){
+        horse1.reset();
+        horse2.reset();
+        horse3.reset();
+    }
+    
+    /**
+     * Randomly make a horse move forward or fall depending
+     * on its confidence rating
+     * A fallen horse cannot move
+     * 
+     * @param theHorse the horse to be moved
+     */
+    protected void moveHorse(Horse theHorse)
+    {
+        //if the horse has fallen it cannot move, 
+        //so only run if it has not fallen
+        
+        if  (!theHorse.hasFallen())
+        {
+            //the probability that the horse will move forward depends on the confidence;
+            if (Math.random() < theHorse.getConfidence())
+            {
+               theHorse.moveForward();
+            }
+            
+            //the probability that the horse will fall is very small (max is 0.1)
+            //but will also will depends exponentially on confidence 
+            //so if you double the confidence, the probability that it will fall is *2
+            if (Math.random() < (0.1*theHorse.getConfidence()*theHorse.getConfidence()))
+            {
+                theHorse.fall();
+            }
+        }
+    }
+        
+    /** 
+     * Determines if a horse has won the race
+     *
+     * @param theHorse The horse we are testing
+     * @return true if the horse has won, false otherwise.
+     */
+    protected boolean raceWonBy(Horse theHorse)
+    {
+        if (theHorse.getDistanceTravelled() == raceLength)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     private void initializeGUI() {
@@ -35,7 +171,6 @@ public class gui extends Race {
         frame.setVisible(true);
     }
 
-    @Override
     public void printRace() {
         panel.removeAll(); 
 
@@ -58,27 +193,6 @@ public class gui extends Race {
         panel.setPreferredSize(new Dimension(this.trackWidth, yPosition + 30)); 
         panel.revalidate();
         panel.repaint();
-
-        yPosition += 10;  // Space before winner label
-
-        if (raceWonBy(lane1Horse))
-        {
-            JLabel winnerLabel = new JLabel("And the winner is " + lane1Horse.getName());
-            winnerLabel.setBounds(10, yPosition, this.finalWidth, 50);
-            panel.add(winnerLabel);
-        }
-        else if (raceWonBy(lane2Horse))
-        {
-            JLabel winnerLabel = new JLabel("And the winner is " + lane2Horse.getName());
-            winnerLabel.setBounds(10, yPosition, this.finalWidth, 50);
-            panel.add(winnerLabel);
-        }
-        else if (raceWonBy(lane3Horse))
-        {
-            JLabel winnerLabel = new JLabel("And the winner is " + lane3Horse.getName());
-            winnerLabel.setBounds(10, yPosition, this.finalWidth, 50);
-            panel.add(winnerLabel);
-        }
     }
 
     protected void printLane(Horse theHorse, int yPos) {
