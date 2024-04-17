@@ -13,7 +13,7 @@ public class gui extends Race {
 
     public gui(int distance) {
         super(distance);
-        this.trackWidth = Math.max(100, 10 * distance);  // Calculate track width based on distance
+        this.trackWidth = Math.max(100, 10 * distance);  
         this.finalWidth = Math.max(100, this.trackWidth + 200);
         initializeGUI();
     }
@@ -21,12 +21,12 @@ public class gui extends Race {
     private void initializeGUI() {
         frame = new JFrame("Horse Race Simulation");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(this.finalWidth, 300);  // Use finalWidth to size the frame
+        frame.setSize(this.finalWidth, 300);  
         frame.setLocationRelativeTo(null);
 
-        panel = new JPanel(null);  // Use null layout for absolute positioning
+        panel = new JPanel(null);  
         panel.setBackground(Color.WHITE);
-        panel.setPreferredSize(new Dimension(this.trackWidth, 300));  // Set panel width to trackWidth
+        panel.setPreferredSize(new Dimension(this.trackWidth, 300));  
 
         JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setPreferredSize(new Dimension(this.finalWidth, 300));
