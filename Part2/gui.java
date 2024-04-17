@@ -3,8 +3,8 @@ package Part2;
 import javax.swing.*;
 import java.awt.*;
 import Part1.Horse;
-import Part1.Race;
 import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
 
 public class gui{
     private JFrame frame;
@@ -12,9 +12,7 @@ public class gui{
     private int trackWidth;
     private int finalWidth;
     private int raceLength;
-    private Horse lane1Horse;
-    private Horse lane2Horse;
-    private Horse lane3Horse;
+    private ArrayList<Horse> horses = new ArrayList<>();
 
     public gui(int distance) {
         this.raceLength = distance;
@@ -24,15 +22,7 @@ public class gui{
     }
     
     public void addHorse(Horse theHorse, int laneNumber) {
-        if (laneNumber == 1) {
-            lane1Horse = theHorse;
-        } else if (laneNumber == 2) {
-            lane2Horse = theHorse;
-        } else if (laneNumber == 3) {
-            lane3Horse = theHorse;
-        } else {
-            System.out.println("Cannot add horse to lane " + laneNumber + " because there is no such lane");
-        }
+        horses.add(laneNumber - 1, theHorse);
     }
 
         /**
@@ -45,20 +35,22 @@ public class gui{
         new Thread(() -> {
             boolean finished = false;
     
-            lane1Horse.goBackToStart();
-            lane2Horse.goBackToStart();
-            lane3Horse.goBackToStart();
+            for (Horse horse : horses) {
+                horse.goBackToStart();
+            }
                           
             while (!finished) {
-                moveHorse(lane1Horse);
-                moveHorse(lane2Horse);
-                moveHorse(lane3Horse);
+                for (Horse horse : horses) {
+                    moveHorse(horse);
+                }
     
-                SwingUtilities.invokeLater(this::printRace);  // Ensure GUI updates are on the EDT
+                SwingUtilities.invokeLater(this::printRace); 
     
-                if (raceWonBy(lane1Horse) || raceWonBy(lane2Horse) || raceWonBy(lane3Horse)) {
-                    finished = true;
-                    SwingUtilities.invokeLater(() -> showWinner());  // Display winner on the EDT
+                for (Horse horse : horses) {
+                    if (raceWonBy(horse)) {
+                        finished = true;
+                        SwingUtilities.invokeLater(() -> showWinner());
+                    }
                 }
     
                 try {
@@ -72,15 +64,11 @@ public class gui{
     
     private void showWinner() {
         JLabel winnerLabel = null;
-        if (raceWonBy(lane1Horse)) {
-            winnerLabel = new JLabel("And the winner is " + lane1Horse.getName());
-            lane1Horse.increaseConfidence();
-        } else if (raceWonBy(lane2Horse)) {
-            winnerLabel = new JLabel("And the winner is " + lane2Horse.getName());
-            lane2Horse.increaseConfidence();
-        } else if (raceWonBy(lane3Horse)) {
-            winnerLabel = new JLabel("And the winner is " + lane3Horse.getName());
-            lane3Horse.increaseConfidence();
+        for (Horse horse : horses) {
+            if (raceWonBy(horse)) {
+                winnerLabel = new JLabel("And the winner is " + horse.getName());
+                horse.increaseConfidence();
+            }
         }
     
         if (winnerLabel != null) {
@@ -174,15 +162,14 @@ public class gui{
     public void printRace() {
         panel.removeAll(); 
 
-        Horse[] horses = {lane1Horse, lane2Horse, lane3Horse};
         int yPosition = 30;
 
-        for (int i = 0; i < horses.length; i++) {
-            if (horses[i] != null) {
-                printLane(horses[i], yPosition);
+        for (int i = 0; i < horses.size(); i++) {
+            if (horses.get(i) != null) {
+                printLane(horses.get(i), yPosition);
                 yPosition += 60;  // Space between lanes
             }
-            if (i < horses.length - 1) {
+            if (i < horses.size() - 1) {
                 JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
                 separator.setBounds(10, yPosition, this.trackWidth, 2);
                 panel.add(separator);
