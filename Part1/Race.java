@@ -12,10 +12,10 @@ import java.lang.Math;
  */
 public class Race
 {
-    private int raceLength;
-    private Horse lane1Horse;
-    private Horse lane2Horse;
-    private Horse lane3Horse;
+    protected int raceLength;
+    protected Horse lane1Horse;
+    protected Horse lane2Horse;
+    protected Horse lane3Horse;
 
     /**
      * Constructor for objects of class Race
@@ -124,7 +124,7 @@ public class Race
      * @param horse2 the second horse
      * @param horse3 the third horse
      */
-    private void resetFallen(Horse horse1, Horse horse2, Horse horse3){
+    protected void resetFallen(Horse horse1, Horse horse2, Horse horse3){
         horse1.reset();
         horse2.reset();
         horse3.reset();
@@ -137,7 +137,7 @@ public class Race
      * 
      * @param theHorse the horse to be moved
      */
-    private void moveHorse(Horse theHorse)
+    protected void moveHorse(Horse theHorse)
     {
         //if the horse has fallen it cannot move, 
         //so only run if it has not fallen
@@ -166,7 +166,7 @@ public class Race
      * @param theHorse The horse we are testing
      * @return true if the horse has won, false otherwise.
      */
-    private boolean raceWonBy(Horse theHorse)
+    protected boolean raceWonBy(Horse theHorse)
     {
         if (theHorse.getDistanceTravelled() == raceLength)
         {
@@ -181,7 +181,7 @@ public class Race
     /***
      * Print the race on the terminal
      */
-    private void printRace()
+    protected void printRace()
     {
         System.out.print('\u000C');  //clear the terminal window
         
@@ -207,7 +207,7 @@ public class Race
      * |           X                      |
      * to show how far the horse has run
      */
-    private void printLane(Horse theHorse)
+    protected void printLane(Horse theHorse)
     {
         //calculate how many spaces are needed before
         //and after the horse
@@ -245,7 +245,7 @@ public class Race
      * 
      * @param aChar the character to Print
      */
-    private void multiplePrint(char aChar, int times)
+    protected void multiplePrint(char aChar, int times)
     {
         int i = 0;
         while (i < times)
