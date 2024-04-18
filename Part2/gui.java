@@ -2,10 +2,8 @@ package Part2;
 
 import javax.swing.*;
 import java.awt.*;
-import Part1.Horse;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
-import java.net.URL;
 
 public class gui {
     private JFrame frame;
@@ -84,9 +82,9 @@ public class gui {
 
 
     private void editHorse(Horse horse) {
-        String symbol = JOptionPane.showInputDialog(frame, "Enter the new symbol for the horse:", horse.getSymbol());
-        if (symbol == null || symbol.isEmpty() || symbol.length() > 1) {
-            JOptionPane.showMessageDialog(frame, "Invalid input for symbol.");
+        String[] symbols = {"\uD83D\uDC0E", "\uD83C\uDFA0", "\uD83C\uDFC7", "\uD83D\uDC34"};
+        String selectedSymbol = (String) JOptionPane.showInputDialog(frame, "Select a symbol for the horse:", "Add Horse", JOptionPane.QUESTION_MESSAGE, null, symbols, symbols[0]);
+        if (selectedSymbol == null) {
             return;
         }
         String name = JOptionPane.showInputDialog(frame, "Enter the new name of the horse:", horse.getName());
@@ -104,16 +102,16 @@ public class gui {
             JOptionPane.showMessageDialog(frame, "Invalid input for confidence. Please enter a valid number between 0.1 and 0.9.");
             return;
         }
-        horse.setSymbol(symbol.charAt(0));
+        horse.setUnicodeHorse(selectedSymbol);
         horse.setName(name);
         horse.setConfidence(confidence);
         updateUI();
     }
 
     private void addHorse() {
-        String symbol = JOptionPane.showInputDialog(frame, "Enter the symbol for the horse:");
-        if (symbol == null || symbol.isEmpty() || symbol.length() > 1) {
-            JOptionPane.showMessageDialog(frame, "Invalid input for symbol.");
+        String[] symbols = {"\uD83D\uDC0E", "\uD83C\uDFA0", "\uD83C\uDFC7", "\uD83D\uDC34"};
+        String selectedSymbol = (String) JOptionPane.showInputDialog(frame, "Select a symbol for the horse:", "Add Horse", JOptionPane.QUESTION_MESSAGE, null, symbols, symbols[0]);
+        if (selectedSymbol == null) {
             return;
         }
         String name = JOptionPane.showInputDialog(frame, "Enter the name of the horse:");
@@ -132,7 +130,7 @@ public class gui {
             return;
         }
 
-        Horse horse = new Horse(symbol.charAt(0), name, confidence);
+        Horse horse = new Horse(selectedSymbol, name, confidence);
         horses.add(horse);
         updateUI();  
     }
@@ -274,7 +272,7 @@ public class gui {
         if (theHorse.hasFallen()) {
             symbolDisplay = "<html><font color='red'>X</font></html>";
         } else {
-            symbolDisplay = String.valueOf(theHorse.getSymbol());
+            symbolDisplay = String.valueOf(theHorse.getUnicodeHorse());
         }
     
         // Create and add the horse symbol label
