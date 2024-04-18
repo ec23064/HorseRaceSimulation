@@ -1,33 +1,24 @@
 package Part2;
 
-/**
- * Write a description of class Horse here.
- * 
- * @author Joshua Benisty
- * @version 1
- */
 public class Horse {
     private String name;
-    private char symbol;
+    private String unicodeHorse; 
     private int distance;
     private boolean fallen;
     private double confidence;
 
-    // Constructor of class Horse
-    /**
-     * Constructor for objects of class Horse
-     */
-    public Horse(char horseSymbol, String horseName, double horseConfidence) {
-        checkConfidenceValue(horseConfidence);
-        this.symbol = horseSymbol;
+    public Horse(String unicodeHorse, String horseName, double horseConfidence) {
+        this.unicodeHorse = unicodeHorse;
         this.name = horseName;
         this.confidence = horseConfidence;
     }
 
-    public void checkConfidenceValue(double confidence) {
-        if (confidence < 0 || confidence > 1) {
-            throw new IllegalArgumentException("Confidence value must be between 0 and 1");
-        }
+    public String getUnicodeHorse() {
+        return unicodeHorse;
+    }
+
+    public void setUnicodeHorse(String unicodeHorse) {
+        this.unicodeHorse = unicodeHorse;
     }
 
     // Other methods of class Horse
@@ -56,10 +47,6 @@ public class Horse {
         return this.name;
     }
 
-    public char getSymbol() {
-        return this.symbol;
-    }
-
     public void goBackToStart() {
         this.distance = 0;
     }
@@ -74,10 +61,6 @@ public class Horse {
 
     public void setConfidence(double newConfidence) {
         this.confidence = newConfidence;
-    }
-
-    public void setSymbol(char newSymbol) {
-        this.symbol = newSymbol;
     }
 
     public void setName(String newName) {
