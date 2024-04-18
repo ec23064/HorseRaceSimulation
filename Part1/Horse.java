@@ -80,10 +80,6 @@ public class Horse {
         this.symbol = newSymbol;
     }
 
-    public void setName(String newName) {
-        this.name = newName;
-    }
-
     public void increaseConfidence() {
         if (this.confidence < 1.0){
             this.confidence += 0.1;
