@@ -3,56 +3,118 @@ package Part2;
 import javax.swing.*;
 import java.awt.*;
 import Part1.Horse;
-import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
-public class gui{
+public class gui {
     private JFrame frame;
-    private JPanel panel;
+    private JPanel panel; 
+    private JButton startRaceButton;
+    private ArrayList<Horse> horses = new ArrayList<>();
+    private int raceLength;
     private int trackWidth;
     private int finalWidth;
-    private int raceLength;
-    private ArrayList<Horse> horses = new ArrayList<>();
 
     public gui(int distance) {
         this.raceLength = distance;
-        this.trackWidth = Math.max(100, 10 * distance);  
+        this.trackWidth = Math.max(100, 10 * distance);
         this.finalWidth = Math.max(100, this.trackWidth + 200);
-        initializeGUI();
-    }
-    
-    public void addHorse(Horse theHorse, int laneNumber) {
-        horses.add(laneNumber - 1, theHorse);
+        createHomeScreen();
     }
 
-        /**
-     * Start the race
-     * The horse are brought to the start and
-     * then repeatedly moved forward until the 
-     * race is finished
-     */
-    public void startRace() {
+    private void createHomeScreen() {
+        frame = new JFrame("Horse Race Simulation");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 200);
+        frame.setLocationRelativeTo(null);
+
+        JPanel homePanel = new JPanel();
+        homePanel.setLayout(new BorderLayout());
+
+        JLabel titleLabel = new JLabel("Horse Race Simulation", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        homePanel.add(titleLabel, BorderLayout.NORTH);
+
+        JButton addHorseButton = new JButton("Add Horse");
+        addHorseButton.addActionListener(e -> addHorse());
+        homePanel.add(addHorseButton, BorderLayout.CENTER);
+
+        startRaceButton = new JButton("Start Race");
+        startRaceButton.setEnabled(false); 
+        startRaceButton.addActionListener(e -> startRace());
+        homePanel.add(startRaceButton, BorderLayout.SOUTH);
+
+        frame.add(homePanel);
+        frame.setVisible(true);
+    }
+
+    private void addHorse() {
+        String symbol = JOptionPane.showInputDialog(frame, "Enter the symbol for the horse:");
+        if (symbol == null || symbol.isEmpty() || symbol.length() > 1) {
+            JOptionPane.showMessageDialog(frame, "Invalid input for symbol.");
+            return;
+        }
+        String name = JOptionPane.showInputDialog(frame, "Enter the name of the horse:");
+        if (name == null || name.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Invalid input for name. Please enter a non-empty value.");
+            return;
+        }
+        double confidence;
+        try {
+            confidence = Double.parseDouble(JOptionPane.showInputDialog(frame, "Enter the confidence rating of the horse (0.0 - 1.0):"));
+            if (confidence < 0.1 || confidence > 0.9) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(frame, "Invalid input for confidence. Please enter a valid number between 0.1 and 0.9.");
+            return;
+        }
+
+        Horse horse = new Horse(symbol.charAt(0), name, confidence);
+        horses.add(horse);
+        updateUI();  
+    }
+
+    private void updateUI() {
+        startRaceButton.setEnabled(horses.size() >= 2);
+    }
+
+    private void startRace() {
+        frame.getContentPane().removeAll();
+        initializeRaceGUI();
+        frame.revalidate();
+        frame.repaint();
+        runRace();
+    }
+
+    private void initializeRaceGUI() {
+        panel = new JPanel(null);
+        panel.setBackground(Color.WHITE);
+        panel.setPreferredSize(new Dimension(trackWidth, 300));
+
+        JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setPreferredSize(new Dimension(finalWidth, 300));
+        frame.add(scrollPane);
+    }
+
+    private void runRace() {
         new Thread(() -> {
             boolean finished = false;
-    
-            for (Horse horse : horses) {
-                horse.goBackToStart();
-            }
-                          
+
             while (!finished) {
                 for (Horse horse : horses) {
                     moveHorse(horse);
                 }
-    
-                SwingUtilities.invokeLater(this::printRace); 
-    
+
+                SwingUtilities.invokeLater(this::printRace);
+
                 for (Horse horse : horses) {
                     if (raceWonBy(horse)) {
                         finished = true;
-                        SwingUtilities.invokeLater(() -> showWinner());
+                        SwingUtilities.invokeLater(this::showWinner);
                     }
                 }
-    
+
                 try {
                     TimeUnit.MILLISECONDS.sleep(100);
                 } catch (InterruptedException e) {
@@ -61,170 +123,89 @@ public class gui{
             }
         }).start();
     }
-    
+
     private void showWinner() {
-        JLabel winnerLabel = null;
         for (Horse horse : horses) {
             if (raceWonBy(horse)) {
-                winnerLabel = new JLabel("And the winner is " + horse.getName());
+                JLabel winnerLabel = new JLabel("And the winner is " + horse.getName(), JLabel.CENTER);
+                winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
+                panel.add(winnerLabel);
                 horse.increaseConfidence();
+                panel.setPreferredSize(new Dimension(trackWidth, panel.getPreferredSize().height + 60));
+                panel.revalidate();
+                panel.repaint();
+                break;
             }
         }
-    
-        if (winnerLabel != null) {
-            winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
-            panel.add(winnerLabel);
-            panel.setPreferredSize(new Dimension(this.trackWidth, panel.getPreferredSize().height + 60));
-            panel.revalidate();
-            panel.repaint();
-        }
     }
-    
 
-    /**
-     * Reset the fallen status of the horses
-     * 
-     * @param horse1 the first horse
-     * @param horse2 the second horse
-     * @param horse3 the third horse
-     */
-    protected void resetFallen(Horse horse1, Horse horse2, Horse horse3){
-        horse1.reset();
-        horse2.reset();
-        horse3.reset();
+    protected boolean raceWonBy(Horse theHorse) {
+        return theHorse.getDistanceTravelled() >= raceLength;
     }
-    
-    /**
-     * Randomly make a horse move forward or fall depending
-     * on its confidence rating
-     * A fallen horse cannot move
-     * 
-     * @param theHorse the horse to be moved
-     */
-    protected void moveHorse(Horse theHorse)
-    {
-        //if the horse has fallen it cannot move, 
-        //so only run if it has not fallen
-        
-        if  (!theHorse.hasFallen())
-        {
-            //the probability that the horse will move forward depends on the confidence;
-            if (Math.random() < theHorse.getConfidence())
-            {
-               theHorse.moveForward();
+
+    protected void moveHorse(Horse theHorse) {
+        if (!theHorse.hasFallen()) {
+            if (Math.random() < theHorse.getConfidence()) {
+                theHorse.moveForward();
             }
-            
-            //the probability that the horse will fall is very small (max is 0.1)
-            //but will also will depends exponentially on confidence 
-            //so if you double the confidence, the probability that it will fall is *2
-            if (Math.random() < (0.1*theHorse.getConfidence()*theHorse.getConfidence()))
-            {
+            if (Math.random() < (0.1 * theHorse.getConfidence() * theHorse.getConfidence())) {
                 theHorse.fall();
             }
         }
     }
-        
-    /** 
-     * Determines if a horse has won the race
-     *
-     * @param theHorse The horse we are testing
-     * @return true if the horse has won, false otherwise.
-     */
-    protected boolean raceWonBy(Horse theHorse)
-    {
-        if (theHorse.getDistanceTravelled() == raceLength)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    private void initializeGUI() {
-        frame = new JFrame("Horse Race Simulation");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(this.finalWidth, 300);  
-        frame.setLocationRelativeTo(null);
-
-        panel = new JPanel(null);  
-        panel.setBackground(Color.WHITE);
-        panel.setPreferredSize(new Dimension(this.trackWidth, 300));  
-
-        JScrollPane scrollPane = new JScrollPane(panel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setPreferredSize(new Dimension(this.finalWidth, 300));
-        frame.add(scrollPane);
-
-        frame.setVisible(true);
-    }
 
     public void printRace() {
-        panel.removeAll(); 
+        panel.removeAll();
 
         int yPosition = 30;
 
-        for (int i = 0; i < horses.size(); i++) {
-            if (horses.get(i) != null) {
-                printLane(horses.get(i), yPosition);
-                yPosition += 60;  // Space between lanes
-            }
-            if (i < horses.size() - 1) {
-                JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
-                separator.setBounds(10, yPosition, this.trackWidth, 2);
-                panel.add(separator);
-                yPosition += 2;  // Adjust for the separator
-            }
+        for (Horse horse : horses) {
+            printLane(horse, yPosition);
+            yPosition += 60;  // Space between lanes
         }
 
-        panel.setPreferredSize(new Dimension(this.trackWidth, yPosition + 30)); 
+        panel.setPreferredSize(new Dimension(trackWidth, yPosition));
         panel.revalidate();
         panel.repaint();
     }
 
     protected void printLane(Horse theHorse, int yPos) {
-        int horsePosition = (int) ((double) theHorse.getDistanceTravelled() / raceLength * this.trackWidth);
-
+        int horsePosition = (int) ((double) theHorse.getDistanceTravelled() / raceLength * trackWidth);
+    
+        // Create and add the lane label
         JLabel laneLabel = new JLabel();
-        laneLabel.setBounds(10, yPos, this.trackWidth, 50);
+        laneLabel.setBounds(10, yPos, trackWidth, 50);
         laneLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        laneLabel.setOpaque(true);
         laneLabel.setBackground(Color.LIGHT_GRAY);
-
-        JLabel nameLabel = new JLabel(theHorse.getName() + " (Confidence: " + String.format("%.2f", theHorse.getConfidence()) + ")");
-        nameLabel.setBounds(10 + this.trackWidth + 10, yPos, 200, 50);
-
-        JLabel horseLabel = new JLabel();
-        horseLabel.setBounds(10 + horsePosition, yPos, 50, 50);
-        String symbol = theHorse.hasFallen() ? "<html><font color='red'>X</font></html>" : Character.toString(theHorse.getSymbol());
-        horseLabel.setText(symbol);
-
-        panel.add(nameLabel);
-        panel.add(horseLabel);
+        laneLabel.setOpaque(true);
         panel.add(laneLabel);
+    
+        // Create and add the name label
+        JLabel nameLabel = new JLabel(theHorse.getName() + " (Confidence: " + String.format("%.2f", theHorse.getConfidence()) + ")");
+        nameLabel.setBounds(trackWidth + 15, yPos, 200, 50);
+        panel.add(nameLabel);
+    
+        // Determine the symbol to display
+        String symbolDisplay;
+        if (theHorse.hasFallen()) {
+            symbolDisplay = "<html><font color='red'>X</font></html>";
+        } else {
+            symbolDisplay = String.valueOf(theHorse.getSymbol());
+        }
+    
+        // Create and add the horse symbol label
+        JLabel horseLabel = new JLabel(symbolDisplay);
+        horseLabel.setBounds(10 + horsePosition, yPos + 5, 40, 40);
+        horseLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        panel.add(horseLabel);
+    
+        // Ensure horse label is on top
+        panel.setComponentZOrder(horseLabel, 0); 
     }
+    
+    
 
     public static void main(String[] args) {
-        gui raceGUI = new gui(20);
-        Horse horse1 = new Horse('&', "Horse 1", 0.8);
-        Horse horse2 = new Horse('#', "Horse 2", 0.1);
-        Horse horse3 = new Horse('$', "Horse 3", 0.5);
-
-        raceGUI.addHorse(horse1, 1);
-        raceGUI.addHorse(horse2, 2);
-        raceGUI.addHorse(horse3, 3);
-        
-        raceGUI.startRace();
-        
+        new gui(20);  
     }
 }
-
-
-
-
-
-
-
-
-
-
