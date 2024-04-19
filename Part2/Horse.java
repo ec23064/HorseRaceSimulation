@@ -42,22 +42,17 @@ public class Horse {
         return totalDistance / totalTime;
     }
 
-    public void setHasWon(boolean hasWon) {
-        this.hasWon = hasWon;
-        if (hasWon) {
-            racesWon++;
-        }
-    }
-
-    public double calculateOdds() {
-        double baseOdds = 1.0 / (0.1 + getWinRatio()); 
-        double oddsVariation = 1.0 + (1.0 - getConfidence()); 
-        return Math.max(1.5, baseOdds * oddsVariation); 
+    public void HasWon() {
+        this.hasWon = true;
     }
     
 
-    public boolean hasWon() {
-        return hasWon;
+    public void hasWon() {
+        this.hasWon = true; 
+    }
+
+    public boolean getHasWon() {
+        return this.hasWon;
     }
 
     public double getWinRatio() {
@@ -129,7 +124,7 @@ public class Horse {
     }
 
     public void setConfidence(double newConfidence) {
-        this.confidence = Math.round(newConfidence * 10.0) / 10.0; // Round to one decimal place
+        this.confidence = Math.round(newConfidence * 10.0) / 10.0;
     }
 
     public void setName(String newName) {

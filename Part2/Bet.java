@@ -17,39 +17,37 @@ class Bet {
 
 class BetManager {
     private List<Bet> bets = new ArrayList<>();
-    private double totalMoney = 1000.0; // Initial money for betting
-    private StringBuilder results = new StringBuilder();
+    private double totalMoney = 1000.0;
 
     public void placeBet(Horse horse, double amount, double odds) {
         if (amount <= totalMoney && amount > 0) {
             Bet bet = new Bet(horse, amount, odds);
             bets.add(bet);
-            totalMoney -= amount;  // Subtract the bet from total money
-        } else {
-            results.append("Not enough money or invalid bet amount.\n");
+            totalMoney -= amount;  
         }
     }
 
     public void calculatePayouts() {
-        results.setLength(0);  // Clear previous results
         for (Bet bet : bets) {
-            if (bet.horse.hasWon()) {
+            if (bet.horse.getHasWon()) {
                 double payout = bet.amount * bet.odds;
-                totalMoney += payout;  // Add winnings including the original bet amount
-                results.append(bet.horse.getName()).append(" won! Payout: $").append(String.format("%.2f", payout)).append("\n");
-            } else {
-                results.append(bet.horse.getName()).append(" lost. Bet: $").append(String.format("%.2f", bet.amount)).append("\n");
-            }
+                totalMoney += payout; 
+            } 
         }
-        if (bets.isEmpty()) {
-            results.append("No bets were placed.\n");
-        }
+        bets.clear(); 
     }
 
-    public String getResults() {
-        return results.toString() + "Total money: $" + String.format("%.2f", totalMoney);
+    public double calculateOdds(Horse horse, int raceLength) {
+        double baseOdds = 1.0 / horse.getConfidence();
+        double riskFactor = (raceLength / 2000.0) * (horse.getConfidence() - 0.5);
+        double calculatedOdds = baseOdds * (1 + riskFactor);
+    
+        return Math.max(1.5, Math.round(calculatedOdds * 100) / 100.0);
     }
-
+    
+    
+    
+    
     public double getTotalMoney() {
         return totalMoney;
     }
@@ -59,7 +57,6 @@ class BetManager {
     }
 
     public double calculateOdds(Horse horse) {
-        // Simplified example: Odds based on the inverse of horse's confidence
         return Math.round(1.0 / horse.getConfidence() * 10) / 10.0;
     }
 }
