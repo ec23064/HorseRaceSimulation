@@ -39,11 +39,12 @@ class BetManager {
 
     public double calculateOdds(Horse horse, int raceLength) {
         double baseOdds = 1.0 / horse.getConfidence();
-        double riskFactor = (raceLength / 2000.0) * (horse.getConfidence() - 0.5);
+        double riskFactor = (raceLength / 1000.0) * (1 - horse.getConfidence()); 
         double calculatedOdds = baseOdds * (1 + riskFactor);
     
-        return Math.max(1.5, Math.round(calculatedOdds * 100) / 100.0);
+        return Math.max(1.5, Math.round(calculatedOdds * 100) / 100.0); 
     }
+    
     
     
     

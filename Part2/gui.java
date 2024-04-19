@@ -42,7 +42,7 @@ public class gui {
         titleLabel.setForeground(new Color(0, 102, 204));
         homePanel.add(titleLabel, BorderLayout.NORTH);
 
-        ImageIcon horseRacingImage = new ImageIcon("/Users/jbenisty/Documents/HorseRaceSimulation/Part2/images/racing.jpeg");
+        ImageIcon horseRacingImage = new ImageIcon("Part2/images/racing.jpeg");
         Image scaledImage = horseRacingImage.getImage().getScaledInstance(frame.getWidth() - 100, frame.getHeight() - 100, Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
         JLabel horseRacingLabel = new JLabel(scaledIcon);
@@ -499,20 +499,19 @@ public class gui {
 
     // Updates the GUI dimensions based on the race conditions.
     private void updateRaceGUI() {
-        int laneHeight = 60;
-        int baseHeight = 100;
-        int width = finalWidth;
-
+        int laneHeight = 70;
+        int baseHeight = 200; 
+    
         int totalHeight = selectedHorses.size() * laneHeight + baseHeight;
-
-        // Update the panel and scroll pane sizes
-        panel.setPreferredSize(new Dimension(width - 50, selectedHorses.size() * laneHeight));
+        panel.setPreferredSize(new Dimension(trackWidth, totalHeight));
+    
         panel.revalidate();
         panel.repaint();
-
-        frame.setSize(width, Math.max(300, totalHeight));
+    
+        frame.setSize(Math.max(500, finalWidth), Math.max(300, totalHeight));
         frame.revalidate();
     }
+    
 
     // Randomly selects the weather from rainy, foggy, and sunny
     private void selectWeather() {
