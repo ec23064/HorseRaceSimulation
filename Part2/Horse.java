@@ -1,16 +1,56 @@
 package Part2;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public class Horse {
     private String name;
-    private String unicodeHorse; 
+    private double confidence;
+    private String unicodeHorse;
     private int distance;
     private boolean fallen;
-    private double confidence;
+    private List<RaceResult> raceResults = new ArrayList<>();
+    private int racesWon;
+    private int timesFallen;
 
     public Horse(String unicodeHorse, String horseName, double horseConfidence) {
         this.unicodeHorse = unicodeHorse;
         this.name = horseName;
         this.confidence = horseConfidence;
+    }
+
+    private static class RaceResult {
+        int time;
+        int length;
+        
+
+        public RaceResult(int time, int length) {
+            this.time = time;
+            this.length = length;
+        }
+    }
+
+    public void addRaceTime(int time) {
+        raceResults.add(new RaceResult(time, this.distance));
+    }
+
+    public double getAverageSpeed() {
+        if (raceResults.isEmpty()) return 0;
+        double totalDistance = raceResults.stream().mapToDouble(result -> result.length).sum();
+        double totalTime = raceResults.stream().mapToInt(result -> result.time).sum() / 1000.0;
+        return totalDistance / totalTime;
+    }
+
+    public double getWinRatio() {
+        return racesWon / (double) raceResults.size();
+    }
+
+    public void increaseWins() {
+        racesWon++;
+    }
+
+    public void increaseTimesFallen() {
+        timesFallen++;
     }
 
     public String getUnicodeHorse() {
@@ -21,13 +61,10 @@ public class Horse {
         this.unicodeHorse = unicodeHorse;
     }
 
-    // Other methods of class Horse
     public void fall() {
         this.fallen = true;
-        if (this.confidence > 0.0){
-            this.confidence -= 0.1;
-            this.confidence = Math.round(this.confidence * 100.0) / 100.0;
-        }
+        setConfidence(confidence - 0.1);
+        increaseTimesFallen();
     }
 
     public void reset() {
@@ -47,8 +84,20 @@ public class Horse {
         return this.name;
     }
 
+    public int getNumberOfRaces() {
+        return this.raceResults.size();
+    }
+
     public void goBackToStart() {
         this.distance = 0;
+    }
+
+    public int getRacesWon() {
+        return this.racesWon;
+    }
+
+    public int getTimesFallen(){
+        return timesFallen;
     }
 
     public boolean hasFallen() {
@@ -60,7 +109,7 @@ public class Horse {
     }
 
     public void setConfidence(double newConfidence) {
-        this.confidence = newConfidence;
+        this.confidence = Math.round(newConfidence * 10.0) / 10.0; // Round to one decimal place
     }
 
     public void setName(String newName) {
@@ -69,7 +118,7 @@ public class Horse {
 
     public void increaseConfidence() {
         if (this.confidence < 1.0){
-            this.confidence += 0.1;
+            setConfidence(this.confidence + 0.1);
         }
     }
 
