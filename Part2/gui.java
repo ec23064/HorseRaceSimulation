@@ -1,14 +1,15 @@
 package Part2;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class gui {
     private JFrame frame;
-    private JPanel panel; 
-    private JButton startRaceButton;
+    private JPanel panel;
+    private JButton startRaceButton, viewStatsButton;
     private ArrayList<Horse> horses = new ArrayList<>();
     private ArrayList<Horse> selectedHorses = new ArrayList<>();
     private int raceLength;
@@ -24,10 +25,10 @@ public class gui {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(500, 300);
         frame.setLocationRelativeTo(null);
-    
+
         JPanel homePanel = new JPanel();
         homePanel.setLayout(new BorderLayout());
-    
+
         JLabel titleLabel = new JLabel("Horse Race Simulation", JLabel.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         homePanel.add(titleLabel, BorderLayout.NORTH);
@@ -38,51 +39,52 @@ public class gui {
         JLabel horseRacingLabel = new JLabel(scaledIcon);
         homePanel.add(horseRacingLabel, BorderLayout.CENTER);
 
-        // Sub-panel for buttons
         JPanel buttonPanel = new JPanel();
         JButton addHorseButton = new JButton("Add Horse");
         addHorseButton.addActionListener(e -> addHorse());
         buttonPanel.add(addHorseButton);
-    
+
         startRaceButton = new JButton("Start Race");
-        startRaceButton.setEnabled(false); 
+        startRaceButton.setEnabled(false);
         startRaceButton.addActionListener(e -> startRaceSelection());
         buttonPanel.add(startRaceButton);
-    
+
         JButton editHorsesButton = new JButton("Edit Horses");
         editHorsesButton.addActionListener(e -> editHorses());
         buttonPanel.add(editHorsesButton);
-    
-        homePanel.add(buttonPanel, BorderLayout.SOUTH); 
-    
+
+        viewStatsButton = new JButton("View Statistics");
+        viewStatsButton.addActionListener(e -> showStatistics());
+        viewStatsButton.setEnabled(false);
+        buttonPanel.add(viewStatsButton);
+
+        homePanel.add(buttonPanel, BorderLayout.SOUTH);
         frame.add(homePanel);
         frame.setVisible(true);
     }
-
-    // Methods for adding, editing, updating UI, and existing horse handling omitted for brevity
 
     private void startRaceSelection() {
         if (horses.size() < 2) {
             JOptionPane.showMessageDialog(frame, "At least two horses are required to start the race.");
             return;
         }
-    
+
         JCheckBox[] checkboxes = new JCheckBox[horses.size()];
         for (int i = 0; i < horses.size(); i++) {
             checkboxes[i] = new JCheckBox(horses.get(i).getName());
         }
-    
+
         int option = JOptionPane.showOptionDialog(frame, checkboxes, "Select horses to race",
-            JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new Object[] {"Start Race", "Cancel"}, "Cancel");
-    
-        if (option == 0) { // Assuming "Start Race" is the first option
+            JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new Object[]{"Start Race", "Cancel"}, "Cancel");
+
+        if (option == 0) {
             selectedHorses.clear();
             for (JCheckBox checkbox : checkboxes) {
                 if (checkbox.isSelected()) {
                     selectedHorses.add(horses.stream().filter(h -> h.getName().equals(checkbox.getText())).findFirst().orElse(null));
                 }
             }
-    
+
             if (selectedHorses.size() < 2) {
                 JOptionPane.showMessageDialog(frame, "Please select at least two horses to start the race.");
             } else {
@@ -90,7 +92,6 @@ public class gui {
             }
         }
     }
-    
 
     private void editHorses() {
         if (horses.isEmpty()) {
@@ -111,8 +112,6 @@ public class gui {
             }
         }
     }
-
-
 
     private void editHorse(Horse horse) {
         String[] symbols = {"\uD83D\uDC0E", "\uD83C\uDFA0", "\uD83C\uDFC7", "\uD83D\uDC34"};
@@ -165,11 +164,12 @@ public class gui {
 
         Horse horse = new Horse(selectedSymbol, name, confidence);
         horses.add(horse);
-        updateUI();  
+        updateUI();
     }
 
     private void updateUI() {
         startRaceButton.setEnabled(horses.size() >= 2);
+        viewStatsButton.setEnabled(!horses.isEmpty());
     }
 
     private void startRace() {
@@ -213,34 +213,37 @@ public class gui {
     }
 
     private void runRace() {
+        int raceStartTime = (int) System.currentTimeMillis();
         new Thread(() -> {
-            boolean finished = false;
+            boolean raceFinished = false;
     
-            while (!finished) {
+            while (!raceFinished) {
                 for (Horse horse : selectedHorses) {
-                    moveHorse(horse);
-                }
-    
-                SwingUtilities.invokeLater(this::printRace);
-    
-                boolean allHaveFallen = selectedHorses.stream().allMatch(Horse::hasFallen);
-    
-                if (allHaveFallen) {
-                    finished = true;
-                    SwingUtilities.invokeLater(() -> {
-                        addBackButton();  // Show the button after displaying the message
-                    });
-                } else {
-                    for (Horse horse : selectedHorses) {
-                        if (raceWonBy(horse)) {
-                            finished = true;
+                    if (!horse.hasFallen() && horse.getDistanceTravelled() < raceLength) {
+                        moveHorse(horse);
+                        SwingUtilities.invokeLater(this::printRace);
+                        if (horse.getDistanceTravelled() >= raceLength) {
+                            int raceEndTime = (int) System.currentTimeMillis();
+                            recordRaceForAll(raceEndTime - raceStartTime);
+                            horse.increaseWins();
+                            horse.increaseConfidence();
+                            raceFinished = true; 
                             SwingUtilities.invokeLater(() -> {
-                                showWinner();
-                                addBackButton();  // Show the button after displaying the winner
+                                showWinner(horse); 
+                                addBackButton();
+                                viewStatsButton.setEnabled(true);
                             });
-                            break;
+                            break; 
                         }
                     }
+                }
+    
+                // Check if all horses have fallen and no one can finish the race
+                if (!raceFinished && selectedHorses.stream().allMatch(Horse::hasFallen)) {
+                    int raceEndTime = (int) System.currentTimeMillis();
+                    raceFinished = true;
+                    recordRaceForAll(raceEndTime - raceStartTime);
+                    SwingUtilities.invokeLater(this::addBackButton);
                 }
     
                 try {
@@ -251,10 +254,12 @@ public class gui {
             }
         }).start();
     }
-
-
     
-    
+    private void recordRaceForAll(int duration) {
+        selectedHorses.forEach(horse -> {
+            horse.addRaceTime(duration);
+        });
+    }
 
     private void addBackButton() {
         JButton backButton = new JButton("Back to Home");
@@ -264,35 +269,52 @@ public class gui {
                 horse.reset();
             }
             createHomeScreen();
-            updateUI(); // Ensure UI is updated
+            updateUI();
             frame.revalidate();
             frame.repaint();
         });
-    
+
         JPanel backPanel = new JPanel();
         backPanel.add(backButton);
-        
+
         frame.getContentPane().add(backPanel, BorderLayout.SOUTH);
-    
+
         frame.revalidate();
         frame.repaint();
     }
+
+    private void showWinner(Horse winner) {
+        JLabel winnerLabel = new JLabel("And the winner is " + winner.getName(), JLabel.CENTER);
+        winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
+        panel.add(winnerLabel);
+        panel.setPreferredSize(new Dimension(trackWidth, panel.getPreferredSize().height + 60));
+        panel.revalidate();
+        panel.repaint();
+    }
     
-    
-    
-    private void showWinner() {
-        for (Horse horse : selectedHorses) {
-            if (raceWonBy(horse)) {
-                JLabel winnerLabel = new JLabel("And the winner is " + horse.getName(), JLabel.CENTER);
-                winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
-                panel.add(winnerLabel);
-                horse.increaseConfidence();
-                panel.setPreferredSize(new Dimension(trackWidth, panel.getPreferredSize().height + 60));
-                panel.revalidate();
-                panel.repaint();
-                break;
-            }
+
+    private void showStatistics() {
+        JFrame statsFrame = new JFrame("Horse Race Statistics");
+        statsFrame.setSize(600, 400);
+        statsFrame.setLayout(new BorderLayout());
+
+        String[] columns = new String[]{"Name", "Races", "Wins", "Times Fallen", "Average Speed", "Win Ratio"};
+        DefaultTableModel model = new DefaultTableModel(columns, 0);
+        JTable statsTable = new JTable(model);
+        for (Horse horse : horses) {
+            Object[] row = new Object[]{
+                horse.getName(),
+                horse.getNumberOfRaces(),
+                horse.getRacesWon(),
+                horse.getTimesFallen(),
+                String.format("%.2f", horse.getAverageSpeed()),
+                String.format("%.2f%%", horse.getWinRatio() * 100)
+            };
+            model.addRow(row);
         }
+
+        statsFrame.add(new JScrollPane(statsTable), BorderLayout.CENTER);
+        statsFrame.setVisible(true);
     }
 
     protected boolean raceWonBy(Horse theHorse) {
@@ -312,22 +334,22 @@ public class gui {
 
     public void printRace() {
         panel.removeAll();
-
+    
         int yPosition = 30;
-
         for (Horse horse : selectedHorses) {
             printLane(horse, yPosition);
-            yPosition += 60;  
+            yPosition += 60;  // Update the yPosition for the next horse
         }
-
+    
         panel.setPreferredSize(new Dimension(trackWidth, yPosition));
         panel.revalidate();
         panel.repaint();
     }
+    
 
     protected void printLane(Horse theHorse, int yPos) {
         int horsePosition = (int) ((double) theHorse.getDistanceTravelled() / raceLength * trackWidth);
-    
+
         // Create and add the lane label
         JLabel laneLabel = new JLabel();
         laneLabel.setBounds(10, yPos, trackWidth, 50);
@@ -348,36 +370,34 @@ public class gui {
         } else {
             symbolDisplay = String.valueOf(theHorse.getUnicodeHorse());
         }
-    
+
         // Create and add the horse symbol label
         JLabel horseLabel = new JLabel(symbolDisplay);
         horseLabel.setBounds(10 + horsePosition, yPos + 5, 40, 40);
         horseLabel.setFont(new Font("Arial", Font.BOLD, 24));
         panel.add(horseLabel);
-    
+
         // Ensure horse label is on top
-        panel.setComponentZOrder(horseLabel, 0); 
+        panel.setComponentZOrder(horseLabel, 0);
     }
 
     private void updateRaceGUI() {
-    int laneHeight = 60;
-    int baseHeight = 100; 
-    int width = finalWidth; 
+        int laneHeight = 60;
+        int baseHeight = 100;
+        int width = finalWidth;
 
-    int totalHeight = selectedHorses.size() * laneHeight + baseHeight;
+        int totalHeight = selectedHorses.size() * laneHeight + baseHeight;
 
-    // Update the panel and scroll pane sizes
-    panel.setPreferredSize(new Dimension(width - 50, selectedHorses.size() * laneHeight));
-    panel.revalidate();
-    panel.repaint();
+        // Update the panel and scroll pane sizes
+        panel.setPreferredSize(new Dimension(width - 50, selectedHorses.size() * laneHeight));
+        panel.revalidate();
+        panel.repaint();
 
-    frame.setSize(width, Math.max(300, totalHeight));
-    frame.revalidate();
-}
-
-    
+        frame.setSize(width, Math.max(300, totalHeight));
+        frame.revalidate();
+    }
 
     public static void main(String[] args) {
-        new gui();  
+        new gui();
     }
 }
