@@ -80,12 +80,12 @@ public class gui {
         }
 
         JPanel checkboxPanel = new JPanel();
-        checkboxPanel.setLayout(new GridLayout(0, 1));  // Arrange checkboxes in a single column
+        checkboxPanel.setLayout(new GridLayout(0, 1));  
 
         JCheckBox[] checkboxes = new JCheckBox[horses.size()];
         for (int i = 0; i < horses.size(); i++) {
             checkboxes[i] = new JCheckBox(horses.get(i).getName());
-            checkboxes[i].setBackground(new Color(245, 245, 245)); // Light gray background for checkboxes
+            checkboxes[i].setBackground(new Color(245, 245, 245)); 
             checkboxes[i].setFont(new Font("SansSerif", Font.BOLD, 12));
             checkboxPanel.add(checkboxes[i]);
         }
@@ -110,7 +110,6 @@ public class gui {
             if (selectedHorses.size() < 2) {
                 JOptionPane.showMessageDialog(frame, "Please select at least two horses to start the race.", "Selection Error", JOptionPane.ERROR_MESSAGE);
             } else {
-                // After confirming the selection, prompt for betting
                 startRace();
             }
         }
@@ -121,7 +120,7 @@ public class gui {
         JFrame bettingFrame = new JFrame("Place Your Bets");
         bettingFrame.setSize(400, 300);
         JPanel bettingPanel = new JPanel(new GridLayout(0, 1));
-        bettingPanel.setBackground(new Color(230, 230, 250));  // Light pastel background
+        bettingPanel.setBackground(new Color(230, 230, 250));  
     
         Font labelFont = new Font("Segoe UI", Font.BOLD, 14);
         Font buttonFont = new Font("Segoe UI", Font.PLAIN, 14);
@@ -470,9 +469,9 @@ public class gui {
     
         // Create and add the lane label
         JLabel laneLabel = new JLabel();
-        laneLabel.setBounds(10, yPos, trackWidth, 60); // Wider lanes for better visibility
+        laneLabel.setBounds(10, yPos, trackWidth, 60); 
         laneLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        laneLabel.setBackground(new Color(245, 245, 220)); // A soft beige background
+        laneLabel.setBackground(new Color(245, 245, 220)); 
         laneLabel.setOpaque(true);
         panel.add(laneLabel);
     
@@ -480,7 +479,7 @@ public class gui {
         JLabel nameLabel = new JLabel(theHorse.getName() + " (Confidence: " + String.format("%.1f", theHorse.getConfidence()) + ")");
         nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
         nameLabel.setForeground(Color.DARK_GRAY);
-        nameLabel.setBounds(trackWidth + 20, yPos + 10, 200, 40); // Adjusted for better alignment
+        nameLabel.setBounds(trackWidth + 20, yPos + 10, 200, 40); 
         panel.add(nameLabel);
     
         // Determine the symbol to display
@@ -489,7 +488,7 @@ public class gui {
         // Create and add the horse symbol label
         JLabel horseLabel = new JLabel(symbolDisplay);
         horseLabel.setBounds(10 + horsePosition, yPos + 10, 40, 40);
-        horseLabel.setFont(new Font("Arial", Font.BOLD, 30)); // Larger font size for symbols
+        horseLabel.setFont(new Font("Arial", Font.BOLD, 30)); 
         panel.add(horseLabel);
     
         // Ensure horse label is on top
