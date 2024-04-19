@@ -3,12 +3,12 @@ package Part2;
 import java.util.List;
 import java.util.ArrayList;
 
-class Bet {
+class Betting {
     Horse horse;
     double amount;
     double odds;
 
-    public Bet(Horse horse, double amount, double odds) {
+    public Betting(Horse horse, double amount, double odds) {
         this.horse = horse;
         this.amount = amount;
         this.odds = odds;
@@ -16,19 +16,19 @@ class Bet {
 }
 
 class BetManager {
-    private List<Bet> bets = new ArrayList<>();
+    private List<Betting> bets = new ArrayList<>();
     private double totalMoney = 1000.0;
 
     public void placeBet(Horse horse, double amount, double odds) {
         if (amount <= totalMoney && amount > 0) {
-            Bet bet = new Bet(horse, amount, odds);
+            Betting bet = new Betting(horse, amount, odds);
             bets.add(bet);
             totalMoney -= amount;  
         }
     }
 
     public void calculatePayouts() {
-        for (Bet bet : bets) {
+        for (Betting bet : bets) {
             if (bet.horse.getHasWon()) {
                 double payout = bet.amount * bet.odds;
                 totalMoney += payout; 
