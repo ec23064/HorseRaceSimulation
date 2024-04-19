@@ -49,6 +49,13 @@ public class Horse {
         }
     }
 
+    public double calculateOdds() {
+        double baseOdds = 1.0 / (0.1 + getWinRatio()); 
+        double oddsVariation = 1.0 + (1.0 - getConfidence()); 
+        return Math.max(1.5, baseOdds * oddsVariation); 
+    }
+    
+
     public boolean hasWon() {
         return hasWon;
     }

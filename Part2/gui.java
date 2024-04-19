@@ -93,35 +93,39 @@ public class gui {
 
     public void showBettingPanel() {
         JFrame bettingFrame = new JFrame("Place Your Bets");
-        bettingFrame.setSize(400, 200);
-        JPanel bettingPanel = new JPanel();
-        bettingPanel.setLayout(new FlowLayout());
-
+        bettingFrame.setSize(400, 300);
+        JPanel bettingPanel = new JPanel(new GridLayout(0, 1));
+    
+        JLabel balanceLabel = new JLabel("Current Balance: $" + String.format("%.2f", betManager.getTotalMoney()));
+        bettingPanel.add(balanceLabel);
+    
         JComboBox<String> horseCombo = new JComboBox<>();
-        for (Horse horse : selectedHorses) {
-            horseCombo.addItem(horse.getName());
-        }
-
         JTextField betAmountField = new JTextField(10);
+        for (Horse horse : selectedHorses) {
+            double odds = betManager.calculateOdds(horse);
+            horseCombo.addItem(horse.getName() + " (Odds: " + odds + ")");
+        }
+    
         JButton submitBetButton = new JButton("Submit Bet and Start Race");
         submitBetButton.addActionListener(e -> {
             Horse selectedHorse = selectedHorses.get(horseCombo.getSelectedIndex());
             double betAmount = Double.parseDouble(betAmountField.getText());
-            double odds = 2.0; // Simplified odds calculation for demonstration
+            double odds = betManager.calculateOdds(selectedHorse);
             betManager.placeBet(selectedHorse, betAmount, odds);
             bettingFrame.dispose();
-            startRace();  // Start the race after placing bets
+            startRace();  // Proceed to start the race after betting
         });
-
-        bettingPanel.add(new JLabel("Select Horse:"));
+    
+        bettingPanel.add(new JLabel("Select Horse and View Odds:"));
         bettingPanel.add(horseCombo);
         bettingPanel.add(new JLabel("Bet Amount:"));
         bettingPanel.add(betAmountField);
         bettingPanel.add(submitBetButton);
-
+    
         bettingFrame.add(bettingPanel);
         bettingFrame.setVisible(true);
     }
+    
     
     private void addHorse() {
         String[] symbols = {"\uD83D\uDC0E", "\uD83C\uDFA0", "\uD83C\uDFC7", "\uD83D\uDC34"};
@@ -266,15 +270,26 @@ public class gui {
         frame.repaint();
     }
 
-    private void showWinner(Horse winner) {
-        JLabel winnerLabel = new JLabel("And the winner is " + winner.getName(), JLabel.CENTER);
-        winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
-        panel.add(winnerLabel);
-        panel.setPreferredSize(new Dimension(trackWidth, panel.getPreferredSize().height + 60));
-        panel.revalidate();
-        panel.repaint();
+private void showWinner(Horse winner) {
+    JLabel winnerLabel = new JLabel("Race finished. " + (winner != null ? "Winner is " + winner.getName() : "No winner"), JLabel.CENTER);
+    winnerLabel.setBounds(10, panel.getPreferredSize().height, this.finalWidth, 20);
+    panel.add(winnerLabel);
+
+    // Check and display betting results
+    if (betManager.hasBets()) {
+        betManager.calculatePayouts();  // Calculate and update results
+        JLabel resultLabel = new JLabel(betManager.getResults(), JLabel.CENTER);
+        resultLabel.setBounds(10, panel.getPreferredSize().height + 20, this.finalWidth, 20);
+        panel.add(resultLabel);
+        panel.setPreferredSize(new Dimension(trackWidth, panel.getPreferredSize().height + 80));
+    } else {
+        panel.setPreferredSize(new Dimension(trackWidth, panel.getPreferredSize().height + 40));
     }
-    
+
+    panel.revalidate();
+    panel.repaint();
+}
+
 
     private void showStatistics() {
         JFrame statsFrame = new JFrame("Horse Race Statistics");
