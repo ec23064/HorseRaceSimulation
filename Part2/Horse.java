@@ -12,13 +12,14 @@ public class Horse {
     private List<RaceResult> raceResults = new ArrayList<>();
     private int racesWon;
     private int timesFallen;
+    private boolean hasWon;
 
     public Horse(String unicodeHorse, String horseName, double horseConfidence) {
         this.unicodeHorse = unicodeHorse;
         this.name = horseName;
         this.confidence = horseConfidence;
+        this.hasWon = false;
     }
-
     private static class RaceResult {
         int time;
         int length;
@@ -39,6 +40,17 @@ public class Horse {
         double totalDistance = raceResults.stream().mapToDouble(result -> result.length).sum();
         double totalTime = raceResults.stream().mapToInt(result -> result.time).sum() / 1000.0;
         return totalDistance / totalTime;
+    }
+
+    public void setHasWon(boolean hasWon) {
+        this.hasWon = hasWon;
+        if (hasWon) {
+            racesWon++;
+        }
+    }
+
+    public boolean hasWon() {
+        return hasWon;
     }
 
     public double getWinRatio() {
@@ -70,6 +82,7 @@ public class Horse {
     public void reset() {
         this.fallen = false;
         this.distance = 0;
+        this.hasWon = false;
     }
 
     public double getConfidence() {

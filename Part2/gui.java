@@ -15,6 +15,7 @@ public class gui {
     private int raceLength;
     private int trackWidth;
     private int finalWidth;
+    private BetManager betManager = new BetManager();
 
     public gui() {
         createHomeScreen();
@@ -49,10 +50,6 @@ public class gui {
         startRaceButton.addActionListener(e -> startRaceSelection());
         buttonPanel.add(startRaceButton);
 
-        JButton editHorsesButton = new JButton("Edit Horses");
-        editHorsesButton.addActionListener(e -> editHorses());
-        buttonPanel.add(editHorsesButton);
-
         viewStatsButton = new JButton("View Statistics");
         viewStatsButton.addActionListener(e -> showStatistics());
         viewStatsButton.setEnabled(false);
@@ -63,7 +60,7 @@ public class gui {
         frame.setVisible(true);
     }
 
-    private void startRaceSelection() {
+    public void startRaceSelection() {
         if (horses.size() < 2) {
             JOptionPane.showMessageDialog(frame, "At least two horses are required to start the race.");
             return;
@@ -75,7 +72,7 @@ public class gui {
         }
 
         int option = JOptionPane.showOptionDialog(frame, checkboxes, "Select horses to race",
-            JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new Object[]{"Start Race", "Cancel"}, "Cancel");
+            JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new Object[]{"Confirm Selection", "Cancel"}, "Cancel");
 
         if (option == 0) {
             selectedHorses.clear();
@@ -88,58 +85,44 @@ public class gui {
             if (selectedHorses.size() < 2) {
                 JOptionPane.showMessageDialog(frame, "Please select at least two horses to start the race.");
             } else {
-                startRace();
+                // After confirming the selection, prompt for betting
+                showBettingPanel();
             }
         }
     }
 
-    private void editHorses() {
-        if (horses.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "No horses in the race. Add horses first.");
-            return;
-        }
-        String[] horseNames = new String[horses.size()];
-        for (int i = 0; i < horses.size(); i++) {
-            horseNames[i] = horses.get(i).getName();
-        }
-        String selectedHorse = (String) JOptionPane.showInputDialog(frame, "Select a horse to edit:", "Edit Horses", JOptionPane.QUESTION_MESSAGE, null, horseNames, horseNames[0]);
-        if (selectedHorse != null) {
-            for (Horse horse : horses) {
-                if (horse.getName().equals(selectedHorse)) {
-                    editHorse(horse);
-                    break;
-                }
-            }
-        }
-    }
+    public void showBettingPanel() {
+        JFrame bettingFrame = new JFrame("Place Your Bets");
+        bettingFrame.setSize(400, 200);
+        JPanel bettingPanel = new JPanel();
+        bettingPanel.setLayout(new FlowLayout());
 
-    private void editHorse(Horse horse) {
-        String[] symbols = {"\uD83D\uDC0E", "\uD83C\uDFA0", "\uD83C\uDFC7", "\uD83D\uDC34"};
-        String selectedSymbol = (String) JOptionPane.showInputDialog(frame, "Select a symbol for the horse:", "Add Horse", JOptionPane.QUESTION_MESSAGE, null, symbols, symbols[0]);
-        if (selectedSymbol == null) {
-            return;
+        JComboBox<String> horseCombo = new JComboBox<>();
+        for (Horse horse : selectedHorses) {
+            horseCombo.addItem(horse.getName());
         }
-        String name = JOptionPane.showInputDialog(frame, "Enter the new name of the horse:", horse.getName());
-        if (name == null || name.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Invalid input for name. Please enter a non-empty value.");
-            return;
-        }
-        double confidence;
-        try {
-            confidence = Double.parseDouble(JOptionPane.showInputDialog(frame, "Enter the new confidence rating of the horse (0.0 - 1.0):", horse.getConfidence()));
-            if (confidence < 0.1 || confidence > 0.9) {
-                throw new NumberFormatException();
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(frame, "Invalid input for confidence. Please enter a valid number between 0.1 and 0.9.");
-            return;
-        }
-        horse.setUnicodeHorse(selectedSymbol);
-        horse.setName(name);
-        horse.setConfidence(confidence);
-        updateUI();
-    }
 
+        JTextField betAmountField = new JTextField(10);
+        JButton submitBetButton = new JButton("Submit Bet and Start Race");
+        submitBetButton.addActionListener(e -> {
+            Horse selectedHorse = selectedHorses.get(horseCombo.getSelectedIndex());
+            double betAmount = Double.parseDouble(betAmountField.getText());
+            double odds = 2.0; // Simplified odds calculation for demonstration
+            betManager.placeBet(selectedHorse, betAmount, odds);
+            bettingFrame.dispose();
+            startRace();  // Start the race after placing bets
+        });
+
+        bettingPanel.add(new JLabel("Select Horse:"));
+        bettingPanel.add(horseCombo);
+        bettingPanel.add(new JLabel("Bet Amount:"));
+        bettingPanel.add(betAmountField);
+        bettingPanel.add(submitBetButton);
+
+        bettingFrame.add(bettingPanel);
+        bettingFrame.setVisible(true);
+    }
+    
     private void addHorse() {
         String[] symbols = {"\uD83D\uDC0E", "\uD83C\uDFA0", "\uD83C\uDFC7", "\uD83D\uDC34"};
         String selectedSymbol = (String) JOptionPane.showInputDialog(frame, "Select a symbol for the horse:", "Add Horse", JOptionPane.QUESTION_MESSAGE, null, symbols, symbols[0]);
