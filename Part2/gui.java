@@ -29,9 +29,11 @@ public class gui {
 
         JPanel homePanel = new JPanel();
         homePanel.setLayout(new BorderLayout());
+        homePanel.setBackground(Color.ORANGE);
 
         JLabel titleLabel = new JLabel("Horse Race Simulation", JLabel.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setForeground(new Color(0, 102, 204));
         homePanel.add(titleLabel, BorderLayout.NORTH);
 
         ImageIcon horseRacingImage = new ImageIcon("/Users/jbenisty/Documents/HorseRaceSimulation/Part2/images/racing.jpeg");
@@ -62,18 +64,30 @@ public class gui {
 
     public void startRaceSelection() {
         if (horses.size() < 2) {
-            JOptionPane.showMessageDialog(frame, "At least two horses are required to start the race.");
+            JOptionPane.showMessageDialog(frame, "At least two horses are required to start the race.", "Insufficient Horses", JOptionPane.WARNING_MESSAGE);
             return;
         }
-
+    
+        JPanel checkboxPanel = new JPanel();
+        checkboxPanel.setLayout(new GridLayout(0, 1));  // Arrange checkboxes in a single column
+    
         JCheckBox[] checkboxes = new JCheckBox[horses.size()];
         for (int i = 0; i < horses.size(); i++) {
             checkboxes[i] = new JCheckBox(horses.get(i).getName());
+            checkboxes[i].setBackground(new Color(245, 245, 245)); // Light gray background for checkboxes
+            checkboxes[i].setFont(new Font("SansSerif", Font.BOLD, 12));
+            checkboxPanel.add(checkboxes[i]);
         }
-
-        int option = JOptionPane.showOptionDialog(frame, checkboxes, "Select horses to race",
-            JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null, new Object[]{"Confirm Selection", "Cancel"}, "Cancel");
-
+    
+        // Scroll pane in case of many horses
+        JScrollPane scrollPane = new JScrollPane(checkboxPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        scrollPane.setPreferredSize(new Dimension(250, 150));
+    
+        int option = JOptionPane.showOptionDialog(frame, scrollPane, "Select horses to race",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.PLAIN_MESSAGE, null,
+                new Object[]{"Confirm Selection", "Cancel"}, "Cancel");
+    
         if (option == 0) {
             selectedHorses.clear();
             for (JCheckBox checkbox : checkboxes) {
@@ -81,31 +95,32 @@ public class gui {
                     selectedHorses.add(horses.stream().filter(h -> h.getName().equals(checkbox.getText())).findFirst().orElse(null));
                 }
             }
-
+    
             if (selectedHorses.size() < 2) {
-                JOptionPane.showMessageDialog(frame, "Please select at least two horses to start the race.");
+                JOptionPane.showMessageDialog(frame, "Please select at least two horses to start the race.", "Selection Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 // After confirming the selection, prompt for betting
                 startRace();
             }
         }
     }
+    
 
     private void showBettingPanel() {
         JFrame bettingFrame = new JFrame("Place Your Bets");
         bettingFrame.setSize(400, 300);
         JPanel bettingPanel = new JPanel(new GridLayout(0, 1));
-
+    
         JLabel balanceLabel = new JLabel("Current Balance: $" + String.format("%.2f", betManager.getTotalMoney()));
         bettingPanel.add(balanceLabel);
-
+    
         JComboBox<String> horseCombo = new JComboBox<>();
         JTextField betAmountField = new JTextField(10);
         for (Horse horse : horses) {
             double odds = betManager.calculateOdds(horse, raceLength);
             horseCombo.addItem(horse.getName() + " (Odds: " + String.format("%.2f", odds) + ")");
         }
-
+    
         JButton submitBetButton = new JButton("Submit Bet and Start Race");
         submitBetButton.addActionListener(e -> {
             Horse selectedHorse = horses.get(horseCombo.getSelectedIndex());
@@ -115,16 +130,24 @@ public class gui {
             bettingFrame.dispose();
             runRace();
         });
-
+    
+        JButton skipBetButton = new JButton("Skip Betting and Start Race");
+        skipBetButton.addActionListener(e -> {
+            bettingFrame.dispose();
+            runRace();
+        });
+    
         bettingPanel.add(new JLabel("Select Horse and View Odds:"));
         bettingPanel.add(horseCombo);
         bettingPanel.add(new JLabel("Bet Amount:"));
         bettingPanel.add(betAmountField);
         bettingPanel.add(submitBetButton);
-
+        bettingPanel.add(skipBetButton);
+    
         bettingFrame.add(bettingPanel);
         bettingFrame.setVisible(true);
     }
+    
     
     
     private void addHorse() {
@@ -287,30 +310,49 @@ private void showWinner(Horse winner) {
     panel.repaint();
 }
 
+private void showStatistics() {
+    JFrame statsFrame = new JFrame("Horse Race Statistics");
+    statsFrame.setSize(600, 400);
+    statsFrame.setLocationRelativeTo(frame); 
+    statsFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-    private void showStatistics() {
-        JFrame statsFrame = new JFrame("Horse Race Statistics");
-        statsFrame.setSize(600, 400);
-        statsFrame.setLayout(new BorderLayout());
-
-        String[] columns = new String[]{"Name", "Races", "Wins", "Times Fallen", "Average Speed", "Win Ratio"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0);
-        JTable statsTable = new JTable(model);
-        for (Horse horse : horses) {
-            Object[] row = new Object[]{
-                horse.getName(),
-                horse.getNumberOfRaces(),
-                horse.getRacesWon(),
-                horse.getTimesFallen(),
-                String.format("%.2f", horse.getAverageSpeed()),
-                String.format("%.2f%%", horse.getWinRatio() * 100)
-            };
-            model.addRow(row);
+    // Styling the table to make it look more appealing
+    String[] columns = {"Name", "Races", "Wins", "Times Fallen", "Average Speed", "Win Ratio"};
+    DefaultTableModel model = new DefaultTableModel(columns, 0) {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
         }
+    };
 
-        statsFrame.add(new JScrollPane(statsTable), BorderLayout.CENTER);
-        statsFrame.setVisible(true);
+    JTable statsTable = new JTable(model);
+    statsTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+    statsTable.setRowHeight(25);
+    statsTable.setBackground(new Color(245, 245, 245)); 
+    statsTable.setForeground(Color.DARK_GRAY);
+    statsTable.setGridColor(new Color(234, 234, 234)); 
+    statsTable.getTableHeader().setFont(new Font("Segoe UI Semibold", Font.BOLD, 16));
+    statsTable.getTableHeader().setBackground(Color.BLACK);
+    statsTable.getTableHeader().setForeground(Color.WHITE);
+
+    for (Horse horse : horses) {
+        Object[] row = {
+            horse.getName(),
+            horse.getNumberOfRaces(),
+            horse.getRacesWon(),
+            horse.getTimesFallen(),
+            String.format("%.2f", horse.getAverageSpeed()),
+            String.format("%.2f%%", horse.getWinRatio() * 100)
+        };
+        model.addRow(row);
     }
+    JScrollPane scrollPane = new JScrollPane(statsTable);
+    scrollPane.setBorder(BorderFactory.createEmptyBorder());
+    statsFrame.add(scrollPane, BorderLayout.CENTER);
+
+    statsFrame.setVisible(true);
+}
+
 
     protected boolean raceWonBy(Horse theHorse) {
         return theHorse.getDistanceTravelled() >= raceLength;
@@ -333,7 +375,7 @@ private void showWinner(Horse winner) {
         int yPosition = 30;
         for (Horse horse : selectedHorses) {
             printLane(horse, yPosition);
-            yPosition += 60;  // Update the yPosition for the next horse
+            yPosition += 60; 
         }
     
         panel.setPreferredSize(new Dimension(trackWidth, yPosition));
